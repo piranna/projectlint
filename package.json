@@ -1,0 +1,31 @@
+{
+  "name": "projectlint",
+  "version": "0.0.0",
+  "description": "A style checker and lint tool for (Node.js) projects",
+  "scripts": {
+    "test": "jest --coverage --notify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/projectlint/projectlint.git"
+  },
+  "author": "Jesús Leganés-Combarro 'piranna' <piranna@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/projectlint/projectlint/issues"
+  },
+  "homepage": "https://github.com/projectlint/projectlint#readme",
+  "dependencies": {
+    "@projectlint/tasks-engine": "github:projectlint/tasks-engine",
+    "levn": "^0.3.0",
+    "pkg-dir": "^4.2.0",
+    "type-check": "^0.3.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/preset-env": "^7.7.7",
+    "babel-jest": "^24.9.0",
+    "jest-cli": "^24.9.0"
+  }
+}
