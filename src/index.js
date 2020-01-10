@@ -5,11 +5,12 @@ const {parsedTypeParse} = require('levn')
 const {parseType} = require('type-check')
 
 
-const parsedType = parseType('[(String, Maybe Object)]')
+const parsedType = parseType('(String, Maybe Object)|[(String, Maybe Object)]')
 
 const levels =
 {
   warn    : 1,  // output the failure
+  warning : 1,  // alias of `warn`
   error   : 2,  // same as `warn`. but process will exit with an error code
   critical: 3,  // same as `error`, but prevent its dependendents to execute
 
@@ -27,19 +28,21 @@ class Failure extends Error
 
   constructor(result, message)
   {
-    super(message || result.message)
+    super(message || result?.message || result)
 
     this.result = result
   }
 }
 
 
-function normalizeRules(entry)
+function normalizeRules([rule, methods])
 {
-  const {configs, levels} = this
-
-  const [rule, methods] = entry
   const {evaluate, fetch, fix} = methods
+
+  if(!evaluate)
+    throw new SyntaxError(`'evaluate' function not defined for rule '${rule}'`)
+
+  const {configs, errorLevel, options, rules} = this
 
   methods.func = async function(context, args, fetchOptions)
   {
@@ -50,18 +53,29 @@ function normalizeRules(entry)
     for(const [level, config] of configs[rule])
       try
       {
-        await evaluate(context, args, fetchOptions, result, config)
+        const evaluation = evaluate(context, args, fetchOptions, result, config)
+
+        if(evaluation instanceof Promise)
+          await evaluation
+        else if(evaluation)
+          throw evaluation instanceof Error
+            ? evaluation
+            : new Failure(evaluation)
       }
       catch(error)
       {
         fixConfig = config
-        levels[rule] = level
 
+        // Level where a failure is considered an error
         if(!(error instanceof errorLevel)) throw error
+
+        rules[rule].failure = error
+        rules[rule].level = level
       }
 
     // We wait to last errors to fix the more critical ones first
-    if(options.fix) await fix(context, args, fetchOptions, result, fixConfig)
+    if(fix && options.fix)
+      await fix(context, args, fetchOptions, result, fixConfig)
 
     return result
   }
@@ -69,10 +83,15 @@ function normalizeRules(entry)
 
 function parseRuleConfig(value)
 {
+  if(!value) throw new SyntaxError('`value` argument must be set')
+
   // Unify as array of entries
   if(typeof value === 'string') value = parsedTypeParse(parsedType, value)
-  else if(value.constructor.name === 'Object') value = Object.entries(value)
+
+  if(value.constructor.name === 'Object') value = Object.entries(value)
   else if(Array.isArray(value) && !Array.isArray(value[0])) value = [value]
+
+  if(!value.length) throw new SyntaxError('`value` argument must not be empty')
 
   // Unify all levels as numbers
   value.forEach(unifyRuleLevel)
@@ -90,23 +109,29 @@ function sortRulesConfig([a], [b])
 
 function unifyRuleLevel(entry)
 {
-  const value = entry[1]
+  const key = entry[0]
 
-  if(typeof value === 'string')
-  {
-    const level = levels[value]
-    if(level == null) throw new SyntaxError(`Unknown level ${value}`)
+  if(typeof key === 'number') return
 
-    entry[1] = level
-  }
+  const level = levels[key]
+  if(level == null) throw new SyntaxError(`Unknown level ${key}`)
+
+  entry[0] = level
 }
 
 
 module.exports = exports = function(rules, configs, options = {})
 {
+  // Normalize rules
   if(!rules) throw new SyntaxError('`rules` argument must be set')
 
-  if(!Array.isArray(rules)) rules = Object.entries(rules)
+  // Normalize config
+  if(!configs) throw new SyntaxError('`configs` argument must be set')
+
+  if(Array.isArray(configs)) configs = Object.fromEntries(configs)
+
+  for(const [rule, config] of Object.entries(configs))
+    configs[rule] = parseRuleConfig(config)
 
   let {errorLevel = 'failure'} = options
 
@@ -118,16 +143,11 @@ module.exports = exports = function(rules, configs, options = {})
     default: throw new Error(`Unknown errorLevel '${errorLevel}'`)
   }
 
-  // Normalize config
-  for(const [rule, config] of Object.entries(configs))
-    configs[rule] = parseRuleConfig(config)
-
   // TODO: apply filtering and expansion of rules here
 
   // Normalize rules
-  const levels = {}
-
-  rules.forEach(normalizeRules, {configs, levels})
+  Object.entries(rules)
+  .forEach(normalizeRules, {configs, errorLevel, options, rules})
 
   // Run tasks
   const visited = tasksEngine(rules, configs)
@@ -141,9 +161,9 @@ module.exports = exports = function(rules, configs, options = {})
     return results.map(function({reason: error, result}, index)
     {
       const name = names[index]
-      const level = levels[name]
+      const {dependsOn, failure, level} = rules[name]
 
-      return {dependsOn, error, level, name, result}
+      return {dependsOn, error, failure, level, name, result}
     })
   })
 }
