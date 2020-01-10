@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "description": "A style checker and lint tool for (Node.js) projects",
   "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
     "test": "jest --coverage --notify"
   },
   "repository": {
@@ -25,7 +27,9 @@
     "@babel/cli": "^7.7.7",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/preset-env": "^7.7.7",
+    "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
+    "eslint": "^6.8.0",
     "jest-cli": "^24.9.0"
   }
 }
