@@ -4,6 +4,7 @@
   "description": "A style checker and lint tool for (Node.js) projects",
   "scripts": {
     "lint": "eslint .",
+    "prepare": "babel src --out-dir .",
     "pretest": "npm run lint",
     "test": "jest --coverage --notify"
   },
