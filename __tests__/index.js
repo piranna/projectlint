@@ -98,6 +98,22 @@ describe("bad arguments", function() {
   });
 });
 
+test("config as string", function() {
+  const rules = {
+    dumb: {}
+  };
+
+  const config = ["dumb"];
+
+  function func() {
+    projeclint(rules, config);
+  }
+
+  expect(func).toThrowErrorMatchingInlineSnapshot(
+    `"\`value\` argument must be set"`
+  );
+});
+
 describe('evaluate', function()
 {
   describe("success", function() {
