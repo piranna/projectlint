@@ -5,7 +5,11 @@ const {parsedTypeParse} = require('levn')
 const {parseType} = require('type-check')
 
 
-const parsedType = parseType('(String, Maybe Object)|[(String, Maybe Object)]')
+const entry = '(String | Number, Undefined | {...})'
+const ruleTypeDesc = `${entry} | [${entry}] | {...}`
+
+const ruleType = parseType(ruleTypeDesc)
+const configEntryType = parseType(`(String, Undefined | ${ruleTypeDesc})`)
 
 const levels =
 {
@@ -34,6 +38,13 @@ class Failure extends Error
   }
 }
 
+
+function mapConfigs(config)
+{
+  if(typeof config !== 'string') return config
+
+  return parsedTypeParse(configEntryType, config)
+}
 
 function normalizeRules([rule, methods])
 {
@@ -128,7 +139,8 @@ module.exports = exports = function(rules, configs, options = {})
   // Normalize config
   if(!configs) throw new SyntaxError('`configs` argument must be set')
 
-  if(Array.isArray(configs)) configs = Object.fromEntries(configs)
+  if(Array.isArray(configs))
+    configs = Object.fromEntries(configs.map(mapConfigs))
 
   for(const [rule, config] of Object.entries(configs))
     configs[rule] = parseRuleConfig(config)
