@@ -57,7 +57,7 @@ function normalizeRules([rule, methods])
 
   methods.func = async function(context, args, fetchOptions)
   {
-    let fixConfig, result
+    let fixConfig, needFix, result
 
     if(fetch) result = await fetch(context, args, fetchOptions)
 
@@ -75,6 +75,7 @@ function normalizeRules([rule, methods])
       }
       catch(error)
       {
+        needFix = true
         fixConfig = config
 
         // Level where a failure is considered an error
@@ -85,7 +86,7 @@ function normalizeRules([rule, methods])
       }
 
     // We wait to last errors to fix the more critical ones first
-    if(fix && options.fix)
+    if(needFix && fix && options.fix)
       await fix(context, args, fetchOptions, result, fixConfig)
 
     return result
