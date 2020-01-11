@@ -97,10 +97,15 @@ function parseRuleConfig(value)
   if(!value) throw new SyntaxError('`value` argument must be set')
 
   // Unify as array of entries
-  if(typeof value === 'string') value = parsedTypeParse(parsedType, value)
+  if(typeof value === 'number') value = [[number]]
 
-  if(value.constructor.name === 'Object') value = Object.entries(value)
-  else if(Array.isArray(value) && !Array.isArray(value[0])) value = [value]
+  else
+  {
+    if(typeof value === 'string') value = parsedTypeParse(ruleType, value)
+
+    if(value.constructor.name === 'Object') value = Object.entries(value)
+    else if(Array.isArray(value) && !Array.isArray(value[0])) value = [value]
+  }
 
   if(!value.length) throw new SyntaxError('`value` argument must not be empty')
 
