@@ -163,7 +163,7 @@ module.exports = exports = function(rules, configs, options = {})
     default: throw new Error(`Unknown errorLevel '${errorLevel}'`)
   }
 
-  if(!projectRoot?.length) options.projectRoot = [resolve()]
+  if(!projectRoot?.length) projectRoot = [resolve()]
 
   // TODO: apply filtering and expansion of rules here
 
@@ -172,22 +172,25 @@ module.exports = exports = function(rules, configs, options = {})
   .forEach(normalizeRules, {configs, errorLevel, options, rules})
 
   // Run tasks
-  const visited = tasksEngine(rules, configs)
-
-  const names    = Object.keys(visited)
-  const promises = Object.values(visited)
-
-  return Promise.allSettled(promises)
-  .then(function(results)
+  return Promise.all(projectRoot.map(function(projectRoot)
   {
-    return results.map(function({reason: error, result}, index)
-    {
-      const name = names[index]
-      const {dependsOn, failure, level} = rules[name]
+    const visited = tasksEngine(rules, configs, {context: {projectRoot}})
 
-      return {dependsOn, error, failure, level, name, result}
+    const names    = Object.keys(visited)
+    const promises = Object.values(visited)
+
+    return Promise.allSettled(promises)
+    .then(function(results)
+    {
+      return results.map(function({reason: error, result}, index)
+      {
+        const name = names[index]
+        const {dependsOn, failure, level} = rules[name]
+
+        return {dependsOn, error, failure, level, name, result}
+      })
     })
-  })
+  }))
 }
 
 exports.Failure = Failure

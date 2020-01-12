@@ -114,8 +114,7 @@ test("config as string", function() {
   );
 });
 
-describe('evaluate', function()
-{
+describe("evaluate", function() {
   describe("success", function() {
     test("return `undefined`", function() {
       const rules = {
@@ -125,21 +124,23 @@ describe('evaluate', function()
       };
 
       const config = {
-        dumb: 'warning'
+        dumb: "warning"
       };
 
       const promise = projeclint(rules, config);
 
       return expect(promise).resolves.toMatchInlineSnapshot(`
                 Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": undefined,
-                    "level": undefined,
-                    "name": "dumb",
-                    "result": undefined,
-                  },
+                  Array [
+                    Object {
+                      "dependsOn": undefined,
+                      "error": undefined,
+                      "failure": undefined,
+                      "level": undefined,
+                      "name": "dumb",
+                      "result": undefined,
+                    },
+                  ],
                 ]
               `);
     });
@@ -147,29 +148,30 @@ describe('evaluate', function()
     test("return Promise object", function() {
       const rules = {
         dumb: {
-          evaluate()
-          {
-            return Promise.resolve()
+          evaluate() {
+            return Promise.resolve();
           }
         }
       };
 
       const config = {
-        dumb: 'warning'
+        dumb: "warning"
       };
 
       const promise = projeclint(rules, config);
 
       return expect(promise).resolves.toMatchInlineSnapshot(`
                 Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": undefined,
-                    "level": undefined,
-                    "name": "dumb",
-                    "result": undefined,
-                  },
+                  Array [
+                    Object {
+                      "dependsOn": undefined,
+                      "error": undefined,
+                      "failure": undefined,
+                      "level": undefined,
+                      "name": "dumb",
+                      "result": undefined,
+                    },
+                  ],
                 ]
               `);
     });
@@ -178,29 +180,30 @@ describe('evaluate', function()
   test("failure", function() {
     const rules = {
       dumb: {
-        evaluate()
-        {
-          throw new projeclint.Failure()
+        evaluate() {
+          throw new projeclint.Failure();
         }
       }
     };
 
     const config = {
-      dumb: {"warning": null}
+      dumb: { warning: null }
     };
 
     const promise = projeclint(rules, config);
 
     return expect(promise).resolves.toMatchInlineSnapshot(`
               Array [
-                Object {
-                  "dependsOn": undefined,
-                  "error": undefined,
-                  "failure": [Failure],
-                  "level": 1,
-                  "name": "dumb",
-                  "result": undefined,
-                },
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": [Failure],
+                    "level": 1,
+                    "name": "dumb",
+                    "result": undefined,
+                  },
+                ],
               ]
             `);
   });
@@ -208,9 +211,8 @@ describe('evaluate', function()
   test("error", function() {
     const rules = {
       dumb: {
-        evaluate()
-        {
-          throw new Error()
+        evaluate() {
+          throw new Error();
         }
       }
     };
@@ -223,35 +225,35 @@ describe('evaluate', function()
 
     return expect(promise).resolves.toMatchInlineSnapshot(`
               Array [
-                Object {
-                  "dependsOn": undefined,
-                  "error": [Error],
-                  "failure": undefined,
-                  "level": undefined,
-                  "name": "dumb",
-                  "result": undefined,
-                },
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": [Error],
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "result": undefined,
+                  },
+                ],
               ]
             `);
   });
-})
+});
 
-describe('multiple levels', function()
-{
+describe("multiple levels", function() {
   test("error fails", function() {
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config)
-        {
-          return config.columns < 101
+        evaluate(context, args, fetchOptions, result, config) {
+          return config.columns < 101;
         }
       }
     };
 
     const config = {
       dumb: [
-        ["warning", {columns: 80}],
-        ["error", {columns: 100}],
+        ["warning", { columns: 80 }],
+        ["error", { columns: 100 }]
       ]
     };
 
@@ -259,14 +261,16 @@ describe('multiple levels', function()
 
     return expect(promise).resolves.toMatchInlineSnapshot(`
               Array [
-                Object {
-                  "dependsOn": undefined,
-                  "error": undefined,
-                  "failure": [Failure: true],
-                  "level": 2,
-                  "name": "dumb",
-                  "result": undefined,
-                },
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "result": undefined,
+                  },
+                ],
               ]
             `);
   });
@@ -274,17 +278,16 @@ describe('multiple levels', function()
   test("error success, warning fails", function() {
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config)
-        {
-          return config.columns < 100
+        evaluate(context, args, fetchOptions, result, config) {
+          return config.columns < 100;
         }
       }
     };
 
     const config = {
       dumb: [
-        ["warning", {columns: 80}],
-        ["error", {columns: 100}],
+        ["warning", { columns: 80 }],
+        ["error", { columns: 100 }]
       ]
     };
 
@@ -292,14 +295,16 @@ describe('multiple levels', function()
 
     return expect(promise).resolves.toMatchInlineSnapshot(`
               Array [
-                Object {
-                  "dependsOn": undefined,
-                  "error": undefined,
-                  "failure": [Failure: true],
-                  "level": 1,
-                  "name": "dumb",
-                  "result": undefined,
-                },
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "result": undefined,
+                  },
+                ],
               ]
             `);
   });
@@ -307,17 +312,16 @@ describe('multiple levels', function()
   test("error and warning success", function() {
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config)
-        {
-          return config.columns < 80
+        evaluate(context, args, fetchOptions, result, config) {
+          return config.columns < 80;
         }
       }
     };
 
     const config = {
       dumb: [
-        ["warning", {columns: 80}],
-        ["error", {columns: 100}],
+        ["warning", { columns: 80 }],
+        ["error", { columns: 100 }]
       ]
     };
 
@@ -325,15 +329,17 @@ describe('multiple levels', function()
 
     return expect(promise).resolves.toMatchInlineSnapshot(`
               Array [
-                Object {
-                  "dependsOn": undefined,
-                  "error": undefined,
-                  "failure": undefined,
-                  "level": undefined,
-                  "name": "dumb",
-                  "result": undefined,
-                },
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "result": undefined,
+                  },
+                ],
               ]
             `);
   });
-})
+});
