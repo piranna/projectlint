@@ -66,7 +66,7 @@ function normalizeRules([rule, methods])
     for(const [level, config] of configs[rule])
       try
       {
-        const evaluation = evaluate(context, args, fetchOptions, result, config)
+        const evaluation = evaluate(context, args, config, result, fetchOptions)
 
         if(evaluation instanceof Promise)
           await evaluation
