@@ -144,6 +144,8 @@ module.exports = exports = function(rules, configs, options = {})
   // Normalize rules
   if(!rules) throw new SyntaxError('`rules` argument must be set')
 
+  if(Array.isArray(rules)) rules = Object.fromEntries(rules)
+
   // Normalize config
   if(!configs) throw new SyntaxError('`configs` argument must be set')
 
