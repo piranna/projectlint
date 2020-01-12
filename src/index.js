@@ -164,6 +164,7 @@ module.exports = exports = function(rules, configs, options = {})
   }
 
   if(!projectRoot?.length) projectRoot = [resolve()]
+  else if(typeof projectRoot === 'string') projectRoot = [projectRoot]
 
   // TODO: apply filtering and expansion of rules here
 
