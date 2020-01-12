@@ -1,3 +1,5 @@
+const {resolve} = require('path')
+
 const tasksEngine = require('@projectlint/tasks-engine')
 
 const {parsedTypeParse} = require('levn')
@@ -151,7 +153,7 @@ module.exports = exports = function(rules, configs, options = {})
   for(const [rule, config] of Object.entries(configs))
     configs[rule] = parseRuleConfig(config)
 
-  let {errorLevel = 'failure'} = options
+  let {errorLevel = 'failure', projectRoot} = options
 
   switch(errorLevel)
   {
@@ -160,6 +162,8 @@ module.exports = exports = function(rules, configs, options = {})
 
     default: throw new Error(`Unknown errorLevel '${errorLevel}'`)
   }
+
+  if(!projectRoot?.length) options.projectRoot = [resolve()]
 
   // TODO: apply filtering and expansion of rules here
 
