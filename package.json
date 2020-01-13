@@ -12,6 +12,23 @@
     "type": "git",
     "url": "git+https://github.com/projectlint/projectlint.git"
   },
+  "keywords": [
+    "lint",
+    "linter",
+    "project",
+    "node",
+    "nodejs",
+    "node.js",
+    "npm",
+    "python",
+    "test",
+    "tests",
+    "error",
+    "errors",
+    "hierarchy",
+    "documentation",
+    "automation"
+  ],
   "author": "Jesús Leganés-Combarro 'piranna' <piranna@gmail.com>",
   "license": "ISC",
   "bugs": {
