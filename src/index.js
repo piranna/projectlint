@@ -68,7 +68,7 @@ function normalizeRules([rule, methods])
   if(!evaluate)
     throw new SyntaxError(`'evaluate' function not defined for rule '${rule}'`)
 
-  const {configs, errorLevel, options, rules} = this
+  const {configs, errorLevel, options} = this
 
   methods.func = async function(context, args, fetchOptions)
   {
@@ -96,8 +96,8 @@ function normalizeRules([rule, methods])
         // Level where a failure is considered an error
         if(!(error instanceof errorLevel)) throw error
 
-        rules[rule].failure = error
-        rules[rule].level = level
+        methods.failure = error
+        methods.level = level
       }
 
     // We wait to last errors to fix the more critical ones first
@@ -192,8 +192,7 @@ module.exports = exports = function(rules, configs, options = {})
   // TODO: apply filtering and expansion of rules here
 
   // Normalize rules
-  Object.entries(rules)
-  .forEach(normalizeRules, {configs, errorLevel, options, rules})
+  Object.entries(rules).forEach(normalizeRules, {configs, errorLevel, options})
 
   // Run tasks
   return Promise.allSettled(projectRoot.map(function(projectRoot)
