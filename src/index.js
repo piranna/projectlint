@@ -61,62 +61,70 @@ function mapProjectRootResults({reason: error, value})
   return value
 }
 
-function normalizeRules([ruleName, rule])
+function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
 {
-  const {evaluate, fetch, fix: fixFunc} = rule
-
   if(!evaluate)
     throw new SyntaxError(`'evaluate' function not defined for rule '${ruleName}'`)
 
-  const {errorLevel, fix} = this
+  const errorLevel = this
 
-  rule.func = async function(context, dependenciesResults, {config, rules})
+  const rule =
   {
-    let fixConfig, needFix, result
+    dependsOn,
 
-    if(fetch) result = await fetch({config, context, dependenciesResults})
+    async func(context, dependenciesResults, {config, rules})
+    {
+      let error, fixConfig, result
 
-    for(const [level, ruleConfig] of rules)
-      try
-      {
-        const evaluation = evaluate({
-          config: ruleConfig,
-          context,
-          dependenciesResults,
-          fetch: {config, result}
-        })
+      if(fetch) result = await fetch({config, context, dependenciesResults})
 
-        if(evaluation instanceof Promise)
-          await evaluation
-        else if(evaluation)
-          throw evaluation instanceof Error
-            ? evaluation
-            : new Failure(evaluation)
-      }
-      catch(error)
-      {
-        needFix = error
-        fixConfig = ruleConfig
+      for(const [level, ruleConfig] of rules)
+        try
+        {
+          const evaluation = evaluate({
+            config: ruleConfig,
+            context,
+            dependenciesResults,
+            fetch: {config, result}
+          })
 
-        // Level where a failure is considered an error
-        if(!(error instanceof errorLevel)) throw error
+          if(evaluation instanceof Promise)
+            await evaluation
+          else if(evaluation)
+            throw evaluation instanceof Error
+              ? evaluation
+              : new Failure(evaluation)
+        }
+        catch(err)
+        {
+          error = err
+          fixConfig = ruleConfig
 
-        rule.failure = error
-        rule.level = level
-      }
+          // Level where a failure is considered an error
+          if(!(err instanceof errorLevel)) throw err
 
-    // We wait to last errors to fix the more critical ones first
-    if(needFix && fixFunc && fix)
-      await fix({
-        config: fixConfig,
-        context,
-        dependenciesResults,
-        error: needFix,
-        fetch: {config, result}
-      })
+          rule.failure = err
+          rule.level = level
+        }
 
-    return result
+      // We wait to last errors to fix the more critical ones first
+      if(error && fix)
+        rule.fix = async function()
+        {
+          return fix({
+            config: fixConfig,
+            context,
+            dependenciesResults,
+            error,
+            fetch: {config, result}
+          })
+        }
+
+      return result
+    }
   }
+
+  return [ruleName, rule]
 }
 
 function parseRuleConfig(rules)
@@ -182,7 +190,7 @@ module.exports = exports = function(rules, configs, options = {})
   // Normalize rules
   if(!rules) throw new SyntaxError('`rules` argument must be set')
 
-  if(Array.isArray(rules)) rules = Object.fromEntries(rules)
+  if(rules.constructor.name === 'Object') rules = Object.entries(rules)
 
   // Normalize config
   if(!configs) throw new SyntaxError('`configs` argument must be set')
@@ -198,8 +206,8 @@ module.exports = exports = function(rules, configs, options = {})
 
   switch(errorLevel)
   {
-    case 'failure': options.errorLevel = Failure; break
-    case 'error'  : options.errorLevel = Error  ; break
+    case 'failure': errorLevel = Failure; break
+    case 'error'  : errorLevel = Error  ; break
 
     default: throw new Error(`Unknown errorLevel '${errorLevel}'`)
   }
@@ -210,10 +218,10 @@ module.exports = exports = function(rules, configs, options = {})
   // Filter duplicated project roots
   if(projectRoot.length > 1) projectRoot = projectRoot.filter(filterDuplicated, [])
 
-  // TODO: apply filtering and expansion of rules here
+  // TODO: apply filtering and expansion of rules here instead of tasks engine
 
   // Normalize rules
-  Object.entries(rules).forEach(normalizeRules, options)
+  rules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
 
   // Run tasks
   return Promise.allSettled(projectRoot.map(function(projectRoot)
