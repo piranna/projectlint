@@ -41,6 +41,11 @@ class Failure extends Error
 }
 
 
+function filterDuplicated(value)
+{
+  if(!this.includes(value)) return this.push(value)
+}
+
 function mapConfigs(config)
 {
   if(typeof config !== 'string') return config
@@ -167,6 +172,9 @@ module.exports = exports = function(rules, configs, options = {})
 
   if(!projectRoot?.length) projectRoot = [resolve()]
   else if(typeof projectRoot === 'string') projectRoot = [projectRoot]
+
+  // Filter duplicated project roots
+  if(projectRoot.length > 1) projectRoot = projectRoot.filter(filterDuplicated, [])
 
   // TODO: apply filtering and expansion of rules here
 
