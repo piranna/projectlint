@@ -211,7 +211,7 @@ module.exports = exports = function(rules, configs, options = {})
         const name = names[index]
         const {dependsOn, failure, level} = rules[name]
 
-        return {dependsOn, error, failure, level, name, result}
+        return {dependsOn, error, failure, level, name, projectRoot, result}
       })
     })
   }))
