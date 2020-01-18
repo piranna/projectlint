@@ -95,7 +95,7 @@ function normalizeRules([ruleName, rule])
       }
       catch(error)
       {
-        needFix = true
+        needFix = error
         fixConfig = ruleConfig
 
         // Level where a failure is considered an error
@@ -111,6 +111,7 @@ function normalizeRules([ruleName, rule])
         config: fixConfig,
         context,
         dependenciesResults,
+        error: needFix,
         fetch: {config, result}
       })
 
