@@ -73,7 +73,7 @@ describe("bad arguments", function() {
     }
 
     expect(func).toThrowErrorMatchingInlineSnapshot(
-      `"\`value\` argument must be set"`
+      `"\`rules\` argument must be set"`
     );
   });
 
@@ -93,7 +93,7 @@ describe("bad arguments", function() {
     }
 
     expect(func).toThrowErrorMatchingInlineSnapshot(
-      `"\`value\` argument must not be empty"`
+      `"\`rules\` argument must not be empty"`
     );
   });
 });
@@ -110,7 +110,7 @@ test("config as string", function() {
   }
 
   expect(func).toThrowErrorMatchingInlineSnapshot(
-    `"\`value\` argument must be set"`
+    `"\`rules\` argument must be set"`
   );
 });
 
@@ -246,10 +246,12 @@ describe("evaluate", function() {
 
 describe("multiple levels", function() {
   test("error fails", function() {
+    const columns = 101;
+
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config) {
-          return config.columns < 101;
+        evaluate(context, args, config) {
+          return config.columns < columns;
         }
       }
     };
@@ -269,8 +271,8 @@ describe("multiple levels", function() {
                   Object {
                     "dependsOn": undefined,
                     "error": undefined,
-                    "failure": undefined,
-                    "level": undefined,
+                    "failure": [Failure: true],
+                    "level": 2,
                     "name": "dumb",
                     "projectRoot": "/home/piranna/github/projectlint/projectlint",
                     "result": undefined,
@@ -281,10 +283,12 @@ describe("multiple levels", function() {
   });
 
   test("error success, warning fails", function() {
+    const columns = 100;
+
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config) {
-          return config.columns < 100;
+        evaluate(context, args, config) {
+          return config.columns < columns;
         }
       }
     };
@@ -304,8 +308,8 @@ describe("multiple levels", function() {
                   Object {
                     "dependsOn": undefined,
                     "error": undefined,
-                    "failure": undefined,
-                    "level": undefined,
+                    "failure": [Failure: true],
+                    "level": 1,
                     "name": "dumb",
                     "projectRoot": "/home/piranna/github/projectlint/projectlint",
                     "result": undefined,
@@ -316,10 +320,12 @@ describe("multiple levels", function() {
   });
 
   test("error and warning success", function() {
+    const columns = 80;
+
     const rules = {
       dumb: {
-        evaluate(context, args, fetchOptions, result, config) {
-          return config.columns < 80;
+        evaluate(context, args, config) {
+          return config.columns < columns;
         }
       }
     };

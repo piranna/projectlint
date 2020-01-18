@@ -61,25 +61,26 @@ function mapProjectRootResults({reason: error, value})
   return value
 }
 
-function normalizeRules([rule, methods])
+function normalizeRules([ruleName, rule])
 {
-  const {evaluate, fetch, fix} = methods
+  const {evaluate, fetch, fix: fixFunc} = rule
 
   if(!evaluate)
-    throw new SyntaxError(`'evaluate' function not defined for rule '${rule}'`)
+    throw new SyntaxError(`'evaluate' function not defined for rule '${ruleName}'`)
 
-  const {configs, errorLevel, options} = this
+  const {errorLevel, fix} = this
 
-  methods.func = async function(context, args, fetchOptions)
+  rule.func = async function(context, dependenciesResults, {config, rules})
   {
     let fixConfig, needFix, result
 
-    if(fetch) result = await fetch(context, args, fetchOptions)
+    if(fetch) result = await fetch(context, dependenciesResults, config)
 
-    for(const [level, config] of configs[rule])
+    for(const [level, ruleConfig] of rules)
       try
       {
-        const evaluation = evaluate(context, args, config, result, fetchOptions)
+        const evaluation = evaluate(context, dependenciesResults, ruleConfig,
+          result, config)
 
         if(evaluation instanceof Promise)
           await evaluation
@@ -91,47 +92,56 @@ function normalizeRules([rule, methods])
       catch(error)
       {
         needFix = true
-        fixConfig = config
+        fixConfig = ruleConfig
 
         // Level where a failure is considered an error
         if(!(error instanceof errorLevel)) throw error
 
-        methods.failure = error
-        methods.level = level
+        rule.failure = error
+        rule.level = level
       }
 
     // We wait to last errors to fix the more critical ones first
-    if(needFix && fix && options.fix)
-      await fix(context, args, fetchOptions, result, fixConfig)
+    if(needFix && fixFunc && fix)
+      await fix(context, dependenciesResults, config, result, fixConfig)
 
     return result
   }
 }
 
-function parseRuleConfig(value)
+function parseRuleConfig(rules)
 {
-  if(!value) throw new SyntaxError('`value` argument must be set')
+  if(!rules) throw new SyntaxError('`rules` argument must be set')
+
+  let config
+  if(rules.rules != null)
+  {
+    config = {...rules}
+    delete config.rules
+
+    rules = rules.rules
+  }
 
   // Unify as array of entries
-  if(typeof value === 'number') value = [[number]]
+  if(typeof rules === 'number') rules = [[number]]
 
   else
   {
-    if(typeof value === 'string') value = parsedTypeParse(ruleType, value)
+    if(typeof rules === 'string') rules = parsedTypeParse(ruleType, rules)
 
-    if(value.constructor.name === 'Object') value = Object.entries(value)
-    else if(Array.isArray(value) && !Array.isArray(value[0])) value = [value]
+    if(rules.constructor.name === 'Object') rules = Object.entries(rules)
+    else if(Array.isArray(rules) && !Array.isArray(rules[0])) rules = [rules]
   }
 
-  if(!value.length) throw new SyntaxError('`value` argument must not be empty')
+  if(!rules.length) throw new SyntaxError('`rules` argument must not be empty')
 
   // Unify all levels as numbers
-  value.forEach(unifyRuleLevel)
+  rules.forEach(unifyRuleLevel)
 
   // Sort rules from less to more critical
-  value.sort(sortRulesConfig)
+  rules.sort(sortRulesConfig)
 
-  return value
+  return {config, rules}
 }
 
 function projectRootResults(results)
@@ -151,7 +161,7 @@ function unifyRuleLevel(entry)
   if(typeof key === 'number') return
 
   const level = levels[key]
-  if(level == null) throw new SyntaxError(`Unknown level ${key}`)
+  if(level == null) throw new SyntaxError(`Unknown level '${key}'`)
 
   entry[0] = level
 }
@@ -170,15 +180,16 @@ module.exports = exports = function(rules, configs, options = {})
   if(Array.isArray(configs))
     configs = Object.fromEntries(configs.map(mapConfigs))
 
-  for(const [rule, config] of Object.entries(configs))
-    configs[rule] = parseRuleConfig(config)
+  for(const [ruleName, config] of Object.entries(configs))
+    configs[ruleName] = parseRuleConfig(config)
 
+  // Normalize error level and project root
   let {errorLevel = 'failure', projectRoot} = options
 
   switch(errorLevel)
   {
-    case 'failure': errorLevel = Failure; break
-    case 'error'  : errorLevel = Error  ; break
+    case 'failure': options.errorLevel = Failure; break
+    case 'error'  : options.errorLevel = Error  ; break
 
     default: throw new Error(`Unknown errorLevel '${errorLevel}'`)
   }
@@ -192,7 +203,7 @@ module.exports = exports = function(rules, configs, options = {})
   // TODO: apply filtering and expansion of rules here
 
   // Normalize rules
-  Object.entries(rules).forEach(normalizeRules, {configs, errorLevel, options})
+  Object.entries(rules).forEach(normalizeRules, options)
 
   // Run tasks
   return Promise.allSettled(projectRoot.map(function(projectRoot)
