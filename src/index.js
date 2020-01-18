@@ -185,7 +185,7 @@ module.exports = exports = function(rules, configs, options = {})
     return Promise.allSettled(promises)
     .then(function(results)
     {
-      return results.map(function({reason: error, result}, index)
+      return results.map(function({reason: error, value: result}, index)
       {
         const name = names[index]
         const {dependsOn, failure, level} = rules[name]
