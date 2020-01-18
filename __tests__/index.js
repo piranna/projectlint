@@ -250,7 +250,7 @@ describe("multiple levels", function() {
 
     const rules = {
       dumb: {
-        evaluate(context, args, config) {
+        evaluate({config}) {
           return config.columns < columns;
         }
       }
@@ -287,7 +287,7 @@ describe("multiple levels", function() {
 
     const rules = {
       dumb: {
-        evaluate(context, args, config) {
+        evaluate({config}) {
           return config.columns < columns;
         }
       }
@@ -324,7 +324,7 @@ describe("multiple levels", function() {
 
     const rules = {
       dumb: {
-        evaluate(context, args, config) {
+        evaluate({config}) {
           return config.columns < columns;
         }
       }

@@ -74,13 +74,17 @@ function normalizeRules([ruleName, rule])
   {
     let fixConfig, needFix, result
 
-    if(fetch) result = await fetch(context, dependenciesResults, config)
+    if(fetch) result = await fetch({config, context, dependenciesResults})
 
     for(const [level, ruleConfig] of rules)
       try
       {
-        const evaluation = evaluate(context, dependenciesResults, ruleConfig,
-          result, config)
+        const evaluation = evaluate({
+          config: ruleConfig,
+          context,
+          dependenciesResults,
+          fetch: {config, result}
+        })
 
         if(evaluation instanceof Promise)
           await evaluation
@@ -103,7 +107,12 @@ function normalizeRules([ruleName, rule])
 
     // We wait to last errors to fix the more critical ones first
     if(needFix && fixFunc && fix)
-      await fix(context, dependenciesResults, config, result, fixConfig)
+      await fix({
+        config: fixConfig,
+        context,
+        dependenciesResults,
+        fetch: {config, result}
+      })
 
     return result
   }
