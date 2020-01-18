@@ -53,6 +53,14 @@ function mapConfigs(config)
   return parsedTypeParse(configEntryType, config)
 }
 
+function mapProjectRootResults({reason: error, value})
+{
+  // This could only happen by a severe crash of the `tasksEngine` instance
+  if(error) return {error}
+
+  return value
+}
+
 function normalizeRules([rule, methods])
 {
   const {evaluate, fetch, fix} = methods
@@ -126,6 +134,11 @@ function parseRuleConfig(value)
   return value
 }
 
+function projectRootResults(results)
+{
+  return results.map(mapProjectRootResults)
+}
+
 function sortRulesConfig([a], [b])
 {
   return a - b
@@ -183,7 +196,7 @@ module.exports = exports = function(rules, configs, options = {})
   .forEach(normalizeRules, {configs, errorLevel, options, rules})
 
   // Run tasks
-  return Promise.all(projectRoot.map(function(projectRoot)
+  return Promise.allSettled(projectRoot.map(function(projectRoot)
   {
     const visited = tasksEngine(rules, configs, {context: {projectRoot}})
 
@@ -202,6 +215,7 @@ module.exports = exports = function(rules, configs, options = {})
       })
     })
   }))
+  .then(projectRootResults)
 }
 
 exports.Failure = Failure
