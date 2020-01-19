@@ -46,19 +46,21 @@ function filterDuplicated(value)
   if(!this.includes(value)) return this.push(value)
 }
 
+function genErrorObject(error)
+{
+  return {error}
+}
+
+function genResultObject(result)
+{
+  return {result}
+}
+
 function mapConfigs(config)
 {
   if(typeof config !== 'string') return config
 
   return parsedTypeParse(configEntryType, config)
-}
-
-function mapProjectRootResults({reason: error, value})
-{
-  // This could only happen by a severe crash of the `tasksEngine` instance
-  if(error) return {error}
-
-  return value
 }
 
 function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
@@ -162,11 +164,6 @@ function parseRuleConfig(rules)
   return {config, rules}
 }
 
-function projectRootResults(results)
-{
-  return results.map(mapProjectRootResults)
-}
-
 function sortRulesConfig([a], [b])
 {
   return a - b
@@ -224,26 +221,21 @@ module.exports = exports = function(rules, configs, options = {})
   rules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
 
   // Run tasks
-  return Promise.allSettled(projectRoot.map(function(projectRoot)
+  return projectRoot.flatMap(function(projectRoot)
   {
-    const visited = tasksEngine(rules, configs, {context: {projectRoot}})
-
-    const names    = Object.keys(visited)
-    const promises = Object.values(visited)
-
-    return Promise.allSettled(promises)
-    .then(function(results)
+    return Object.entries(tasksEngine(rules, configs, {context: {projectRoot}}))
+    .map(function([name, promise])
     {
-      return results.map(function({reason: error, value: result}, index)
+      return promise
+      .then(genResultObject, genErrorObject)
+      .then(function({error, result})
       {
-        const name = names[index]
         const {dependsOn, failure, level} = rules[name]
 
         return {dependsOn, error, failure, level, name, projectRoot, result}
       })
     })
-  }))
-  .then(projectRootResults)
+  })
 }
 
 exports.Failure = Failure

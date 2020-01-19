@@ -127,21 +127,25 @@ describe("evaluate", function() {
         dumb: "warning"
       };
 
-      const promise = projeclint(rules, config);
+      const result = projeclint(rules, config);
 
-      return expect(promise).resolves.toMatchInlineSnapshot(`
+      expect(result).toMatchInlineSnapshot(`
                 Array [
-                  Array [
-                    Object {
-                      "dependsOn": undefined,
-                      "error": undefined,
-                      "failure": undefined,
-                      "level": undefined,
-                      "name": "dumb",
-                      "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                      "result": undefined,
-                    },
-                  ],
+                  Promise {},
+                ]
+              `);
+
+      return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
+                Array [
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                    "result": undefined,
+                  },
                 ]
               `);
     });
@@ -159,21 +163,19 @@ describe("evaluate", function() {
         dumb: "warning"
       };
 
-      const promise = projeclint(rules, config);
+      const result = projeclint(rules, config);
 
-      return expect(promise).resolves.toMatchInlineSnapshot(`
+      return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
                 Array [
-                  Array [
-                    Object {
-                      "dependsOn": undefined,
-                      "error": undefined,
-                      "failure": undefined,
-                      "level": undefined,
-                      "name": "dumb",
-                      "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                      "result": undefined,
-                    },
-                  ],
+                  Object {
+                    "dependsOn": undefined,
+                    "error": undefined,
+                    "failure": undefined,
+                    "level": undefined,
+                    "name": "dumb",
+                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                    "result": undefined,
+                  },
                 ]
               `);
     });
@@ -192,21 +194,19 @@ describe("evaluate", function() {
       dumb: { warning: null }
     };
 
-    const promise = projeclint(rules, config);
+    const result = projeclint(rules, config);
 
-    return expect(promise).resolves.toMatchInlineSnapshot(`
+    return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
               Array [
-                Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": [Failure],
-                    "level": 1,
-                    "name": "dumb",
-                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                    "result": undefined,
-                  },
-                ],
+                Object {
+                  "dependsOn": undefined,
+                  "error": undefined,
+                  "failure": [Failure],
+                  "level": 1,
+                  "name": "dumb",
+                  "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                  "result": undefined,
+                },
               ]
             `);
   });
@@ -224,21 +224,19 @@ describe("evaluate", function() {
       dumb: ["warning"]
     };
 
-    const promise = projeclint(rules, config);
+    const result = projeclint(rules, config);
 
-    return expect(promise).resolves.toMatchInlineSnapshot(`
+    return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
               Array [
-                Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": [Error],
-                    "failure": undefined,
-                    "level": undefined,
-                    "name": "dumb",
-                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                    "result": undefined,
-                  },
-                ],
+                Object {
+                  "dependsOn": undefined,
+                  "error": [Error],
+                  "failure": undefined,
+                  "level": undefined,
+                  "name": "dumb",
+                  "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                  "result": undefined,
+                },
               ]
             `);
   });
@@ -263,21 +261,19 @@ describe("multiple levels", function() {
       ]
     };
 
-    const promise = projeclint(rules, config);
+    const result = projeclint(rules, config);
 
-    return expect(promise).resolves.toMatchInlineSnapshot(`
+    return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
               Array [
-                Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": [Failure: true],
-                    "level": 2,
-                    "name": "dumb",
-                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                    "result": undefined,
-                  },
-                ],
+                Object {
+                  "dependsOn": undefined,
+                  "error": undefined,
+                  "failure": [Failure: true],
+                  "level": 2,
+                  "name": "dumb",
+                  "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                  "result": undefined,
+                },
               ]
             `);
   });
@@ -300,21 +296,19 @@ describe("multiple levels", function() {
       ]
     };
 
-    const promise = projeclint(rules, config);
+    const result = projeclint(rules, config);
 
-    return expect(promise).resolves.toMatchInlineSnapshot(`
+    return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
               Array [
-                Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": [Failure: true],
-                    "level": 1,
-                    "name": "dumb",
-                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                    "result": undefined,
-                  },
-                ],
+                Object {
+                  "dependsOn": undefined,
+                  "error": undefined,
+                  "failure": [Failure: true],
+                  "level": 1,
+                  "name": "dumb",
+                  "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                  "result": undefined,
+                },
               ]
             `);
   });
@@ -337,21 +331,19 @@ describe("multiple levels", function() {
       ]
     };
 
-    const promise = projeclint(rules, config);
+    const result = projeclint(rules, config);
 
-    return expect(promise).resolves.toMatchInlineSnapshot(`
+    return expect(Promise.all(result)).resolves.toMatchInlineSnapshot(`
               Array [
-                Array [
-                  Object {
-                    "dependsOn": undefined,
-                    "error": undefined,
-                    "failure": undefined,
-                    "level": undefined,
-                    "name": "dumb",
-                    "projectRoot": "/home/piranna/github/projectlint/projectlint",
-                    "result": undefined,
-                  },
-                ],
+                Object {
+                  "dependsOn": undefined,
+                  "error": undefined,
+                  "failure": undefined,
+                  "level": undefined,
+                  "name": "dumb",
+                  "projectRoot": "/home/piranna/github/projectlint/projectlint",
+                  "result": undefined,
+                },
               ]
             `);
   });
