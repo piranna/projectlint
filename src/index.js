@@ -46,16 +46,6 @@ function filterDuplicated(value)
   if(!this.includes(value)) return this.push(value)
 }
 
-function genErrorObject(error)
-{
-  return {error}
-}
-
-function genResultObject(result)
-{
-  return {result}
-}
-
 function mapConfigs(config)
 {
   if(typeof config !== 'string') return config
@@ -221,21 +211,21 @@ module.exports = exports = function(rules, configs, options = {})
   rules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
 
   // Run tasks
-  return projectRoot.flatMap(function(projectRoot)
+  return projectRoot.reduce(function(acum, projectRoot)
   {
-    return Object.entries(tasksEngine(rules, configs, {context: {projectRoot}}))
-    .map(function([name, promise])
-    {
-      return promise
-      .then(genResultObject, genErrorObject)
-      .then(function({error, result})
-      {
-        const {dependsOn, failure, level} = rules[name]
+    const visited = tasksEngine(rules, configs, {context: {projectRoot}})
 
-        return {dependsOn, error, failure, level, name, projectRoot, result}
-      })
-    })
-  })
+    for(const [ruleName, promise] of Object.entries(visited))
+    {
+      const {dependsOn, failure, level} = rules[ruleName]
+
+      visited[ruleName] = {dependsOn, failure, level, promise}
+    }
+
+    acum[projectRoot] = visited
+
+    return acum
+  }, {})
 }
 
 exports.Failure = Failure
