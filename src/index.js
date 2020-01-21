@@ -89,14 +89,17 @@ function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
         }
         catch(err)
         {
-          error = err
-          fixConfig = ruleConfig
+          rule.level = level
 
           // Level where a failure is considered an error
-          if(!(err instanceof errorLevel)) throw err
+          if(!(err instanceof errorLevel))
+          {
+            rule.result = result
+            throw err
+          }
 
-          rule.failure = err
-          rule.level = level
+          rule.failure = error = err
+          fixConfig = ruleConfig
         }
 
       // We wait to last errors to fix the more critical ones first
@@ -207,19 +210,33 @@ module.exports = exports = function(rules, configs, options = {})
 
   // TODO: apply filtering and expansion of rules here instead of tasks engine
 
-  // Normalize rules
-  rules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
-
   // Run tasks
   return projectRoot.reduce(function(acum, projectRoot)
   {
-    const visited = tasksEngine(rules, configs, {context: {projectRoot}})
+    // Normalize rules
+    const projectRules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
+
+    const visited = tasksEngine(projectRules, configs, {context: {projectRoot}})
 
     for(const [ruleName, promise] of Object.entries(visited))
     {
-      const {dependsOn, failure, level} = rules[ruleName]
+      const {dependsOn} = projectRules[ruleName]
 
-      visited[ruleName] = {dependsOn, failure, level, promise}
+      const evaluated = promise
+      .then(function(result)
+      {
+        const {failure, fix, level} = projectRules[ruleName]
+
+        return {failure, fix, level, result}
+      },
+      function(error)
+      {
+        const {level, result} = projectRules[ruleName]
+
+        return {error, level, result}
+      })
+
+      visited[ruleName] = {dependsOn, evaluated}
     }
 
     acum[projectRoot] = visited
