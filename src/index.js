@@ -70,6 +70,8 @@ function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
 
       if(fetch) result = await fetch({config, context, dependenciesResults})
 
+      rule.level = 0
+
       for(const [level, ruleConfig] of rules)
         try
         {
