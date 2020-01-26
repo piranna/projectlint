@@ -84,10 +84,16 @@ function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
 
           if(evaluation instanceof Promise)
             await evaluation
+          else if(evaluation instanceof Error)
+            throw evaluation
+          else if(Array.isArray(evaluation))
+          {
+            if(evaluation.length) throw new Failure(evaluation)
+          }
           else if(evaluation)
-            throw evaluation instanceof Error
-              ? evaluation
-              : new Failure(evaluation)
+            if(evaluation.constructor.name !== 'Object'
+            || Object.keys(evaluation).length)
+              throw new Failure(evaluation)
         }
         catch(err)
         {
