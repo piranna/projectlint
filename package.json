@@ -1,5 +1,5 @@
 {
-  "name": "projectlint",
+  "name": "@projectlint/projectlint",
   "version": "0.0.0",
   "description": "A style checker and lint tool for (Node.js) projects",
   "scripts": {
