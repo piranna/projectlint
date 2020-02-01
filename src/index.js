@@ -28,8 +28,7 @@ const levels =
   disabled: -4   // explicitly disable a rule, failing its dependents
 }
 
-const name = require('../package.json').name.split('/')[0].replace(/^@/, '')
-const explorer = cosmiconfigSync(name)
+const explorer = cosmiconfigSync('projectlint')
 
 
 class Failure extends Error
