@@ -17,7 +17,7 @@ describe("bad arguments", function() {
     }
 
     expect(func).toThrowErrorMatchingInlineSnapshot(
-      `"\`configs\` argument must be set"`
+      `"config not found, and \`configs\` argument not set"`
     );
   });
 

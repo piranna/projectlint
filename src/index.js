@@ -2,6 +2,8 @@ const {resolve} = require('path')
 
 const tasksEngine = require('@projectlint/tasks-engine')
 
+const {cosmiconfigSync} = require('cosmiconfig')
+const merge = require('deepmerge')
 const {parsedTypeParse} = require('levn')
 // const pkgDir = require('pkg-dir')
 const {parseType} = require('type-check')
@@ -27,6 +29,9 @@ const levels =
   disabled: -4   // explicitly disable a rule, failing its dependents
 }
 
+const name = require('../package.json').name.split('/')[0].replace(/^@/, '')
+const explorer = cosmiconfigSync(name)
+
 
 class Failure extends Error
 {
@@ -51,6 +56,17 @@ function mapConfigs(config)
   if(typeof config !== 'string') return config
 
   return parsedTypeParse(configEntryType, config)
+}
+
+function normalizeConfigs(configs)
+{
+  if(Array.isArray(configs))
+    configs = Object.fromEntries(configs.map(mapConfigs))
+
+  for(const [ruleName, config] of Object.entries(configs))
+    configs[ruleName] = parseRuleConfig(config)
+
+  return configs
 }
 
 function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
@@ -183,25 +199,23 @@ function unifyRuleLevel(entry)
 }
 
 
-module.exports = exports = function(rules, configs, options = {})
-{
+module.exports = exports = function(
+  rules,
+  configs,
+  {errorLevel = 'failure', projectRoot, use_projectlintrc = true} = {}
+){
   // Normalize rules
   if(!rules) throw new SyntaxError('`rules` argument must be set')
 
   if(rules.constructor.name === 'Object') rules = Object.entries(rules)
 
   // Normalize config
-  if(!configs) throw new SyntaxError('`configs` argument must be set')
-
-  if(Array.isArray(configs))
-    configs = Object.fromEntries(configs.map(mapConfigs))
-
-  for(const [ruleName, config] of Object.entries(configs))
-    configs[ruleName] = parseRuleConfig(config)
+  if(configs) configs = normalizeConfigs(configs)
+  else if(!use_projectlintrc)
+    throw new SyntaxError('`configs` argument must be set, '+
+      'or `use_projectlintrc` flag must be enabled')
 
   // Normalize error level and project root
-  let {errorLevel = 'failure', projectRoot} = options
-
   switch(errorLevel)
   {
     case 'failure': errorLevel = Failure; break
@@ -223,6 +237,15 @@ module.exports = exports = function(rules, configs, options = {})
   {
     // Normalize rules
     const projectRules = Object.fromEntries(rules.map(normalizeRules, errorLevel))
+
+    if(use_projectlintrc)
+    {
+      const result = explorer.search(projectRoot)
+      if(result)
+        configs = merge(normalizeConfigs(result), configs || {})
+      else if(!configs)
+        throw new SyntaxError('config not found, and `configs` argument not set')
+    }
 
     const visited = tasksEngine(projectRules, configs, {context: {projectRoot}})
 
