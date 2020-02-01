@@ -5,7 +5,6 @@ const tasksEngine = require('@projectlint/tasks-engine')
 const {cosmiconfigSync} = require('cosmiconfig')
 const merge = require('deepmerge')
 const {parsedTypeParse} = require('levn')
-// const pkgDir = require('pkg-dir')
 const {parseType} = require('type-check')
 
 

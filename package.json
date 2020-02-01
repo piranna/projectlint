@@ -40,7 +40,6 @@
     "cosmiconfig": "^6.0.0",
     "deepmerge": "^4.2.2",
     "levn": "^0.3.0",
-    "pkg-dir": "^4.2.0",
     "type-check": "^0.3.2"
   },
   "devDependencies": {
