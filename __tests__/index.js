@@ -151,15 +151,15 @@ describe("evaluate", function() {
       `);
 
       return expect(getPromises(result)).resolves.toMatchInlineSnapshot(`
-                          Array [
-                            Object {
-                              "failure": undefined,
-                              "fix": undefined,
-                              "level": undefined,
-                              "result": undefined,
-                            },
-                          ]
-                    `);
+        Array [
+          Object {
+            "failure": undefined,
+            "fix": undefined,
+            "level": 0,
+            "result": undefined,
+          },
+        ]
+      `);
     });
 
     test("return Promise object", function() {
@@ -189,15 +189,15 @@ describe("evaluate", function() {
       `);
 
       return expect(getPromises(result)).resolves.toMatchInlineSnapshot(`
-                        Array [
-                          Object {
-                            "failure": undefined,
-                            "fix": undefined,
-                            "level": undefined,
-                            "result": undefined,
-                          },
-                        ]
-                    `);
+        Array [
+          Object {
+            "failure": undefined,
+            "fix": undefined,
+            "level": 0,
+            "result": undefined,
+          },
+        ]
+      `);
     });
   });
 
@@ -394,7 +394,7 @@ describe("multiple levels", function() {
         Object {
           "failure": undefined,
           "fix": undefined,
-          "level": undefined,
+          "level": 0,
           "result": undefined,
         },
       ]
