@@ -16,6 +16,7 @@ const configEntryType = parseType(`(String, Undefined | ${ruleTypeDesc})`)
 
 const levels =
 {
+  info    : 0,  // output everything
   warn    : 1,  // output the failure
   warning : 1,  // alias of `warn`
   error   : 2,  // same as `warn`. but process will exit with an error code
@@ -82,47 +83,61 @@ function normalizeRules([ruleName, {dependsOn, evaluate, fetch, fix}])
     {
       let error, fixConfig, result
 
-      if(fetch) result = await fetch({config, context, dependenciesResults})
-
-      rule.level = 0
-
-      for(const [level, ruleConfig] of rules)
+      if(fetch)
         try
         {
-          const evaluation = evaluate({
-            config: ruleConfig,
-            context,
-            dependenciesResults,
-            fetch: {config, result}
-          })
-
-          if(evaluation instanceof Promise)
-            await evaluation
-          else if(evaluation instanceof Error)
-            throw evaluation
-          else if(Array.isArray(evaluation))
-          {
-            if(evaluation.length) throw new Failure(evaluation)
-          }
-          else if(evaluation)
-            if(evaluation.constructor.name !== 'Object'
-            || Object.keys(evaluation).length)
-              throw new Failure(evaluation)
+          result = await fetch({config, context, dependenciesResults})
         }
         catch(err)
         {
-          rule.level = level
-
-          // Level where a failure is considered an error
-          if(!(err instanceof errorLevel))
-          {
-            rule.result = result
-            throw err
-          }
+          // Check level where Failure is considered an error
+          if(!(err instanceof errorLevel)) throw err
 
           rule.failure = error = err
-          fixConfig = ruleConfig
         }
+
+      if(!error)
+      {
+        rule.level = 0
+
+        for(const [level, ruleConfig] of rules)
+          try
+          {
+            const evaluation = evaluate({
+              config: ruleConfig,
+              context,
+              dependenciesResults,
+              fetch: {config, result}
+            })
+
+            if(evaluation instanceof Promise)
+              await evaluation
+            else if(evaluation instanceof Error)
+              throw evaluation
+            else if(Array.isArray(evaluation))
+            {
+              if(evaluation.length) throw new Failure(evaluation)
+            }
+            else if(evaluation)
+              if(evaluation.constructor.name !== 'Object'
+              || Object.keys(evaluation).length)
+                throw new Failure(evaluation)
+          }
+          catch(err)
+          {
+            rule.level = level
+
+            // Check level where Failure is considered an error
+            if(!(err instanceof errorLevel))
+            {
+              rule.result = result
+              throw err
+            }
+
+            rule.failure = error = err
+            fixConfig = ruleConfig
+          }
+      }
 
       // We wait to last errors to fix the more critical ones first
       if(error && fix)
