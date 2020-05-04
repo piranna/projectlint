@@ -255,7 +255,11 @@ module.exports = exports = function(
     {
       const result = explorer.search(projectRoot)
       if(result)
-        configs = merge(normalizeConfigs(result), configs || {})
+      {
+        const normalized = normalizeConfigs(result)
+
+        configs = configs ? merge(normalized, configs) : normalized
+      }
       else if(!configs)
         throw new SyntaxError('config not found, and `configs` argument not set')
     }
